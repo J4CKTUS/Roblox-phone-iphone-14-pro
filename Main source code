@@ -1,0 +1,380 @@
+--[[
+╔══════════════════════════════════════════════════════════════════╗
+║           iPhone 14 Pro UI  —  Roblox LocalScript               ║
+║                                                                  ║
+║   Made by    : J4CKTUS                                           ║
+║   Community  : flowix.gg                                         ║
+║   Discord    : discord.gg/Sf4shXvy                               ║
+║   Version    : v9.5  (GitHub Release)                            ║
+║                                                                  ║
+║   ✦  Do NOT remove credits                                       ║
+║   ✦  Do NOT resell or claim as your own                          ║
+║   ✦  Free to use      
+║   ✦  If this was sold to you, you got scammed
+║                                                                  ║
+║   © J4CKTUS / Flowix  —  flowix.gg                               ║
+╚══════════════════════════════════════════════════════════════════╝
+
+  FEATURES:
+  • Realistic iPhone 14 Pro design
+  • Live clock & date
+  • Lockscreen with torch + camera buttons
+  • Home screen with 12 animated app icons
+  • App screens with header bar
+  • Smooth open/close animation  (Press M)
+  • Click anywhere on lockscreen to unlock
+  • Rounded edges everywhere
+  • No Dynamic Island
+  • No dark overlay on open
+
+  WATERMARKS (hidden inside phone, not visible during gameplay):
+  Multiple invisible watermarks are embedded in the GUI tree.
+  Removing them is a violation of the usage terms.
+]]
+
+-- ═══════════════════════════════════════════════════════════════════
+--  WATERMARK BLOCK — DO NOT REMOVE
+--  J4CKTUS | flowix.gg | discord.gg/Sf4shXvy
+-- ═══════════════════════════════════════════════════════════════════
+local _WM_AUTHOR   = "J4CKTUS"
+local _WM_SITE     = "flowix.gg"
+local _WM_DISCORD  = "discord.gg/Sf4shXvy"
+local _WM_VERSION  = "v9.5"
+local _WM_CHECK    = ("Made by %s | %s | %s"):format(_WM_AUTHOR,_WM_SITE,_WM_DISCORD)
+-- ═══════════════════════════════════════════════════════════════════
+
+local Players          = game:GetService("Players")
+local TweenService     = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local RunService       = game:GetService("RunService")
+
+local player    = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- ── HELPERS ──────────────────────────────────────────────────────────
+local function tw(o,t,p,s,d)
+	TweenService:Create(o,TweenInfo.new(t,s or Enum.EasingStyle.Quart,d or Enum.EasingDirection.Out),p):Play()
+end
+local function twB(o,t,p) tw(o,t,p,Enum.EasingStyle.Back,Enum.EasingDirection.Out) end
+local function mkF(parent,size,pos,col,alpha,zi,name,clip)
+	local f=Instance.new("Frame"); f.Size=size; f.Position=pos or UDim2.new(0,0,0,0)
+	f.BackgroundColor3=col or Color3.new(0,0,0); f.BackgroundTransparency=alpha or 0
+	f.BorderSizePixel=0; f.ZIndex=zi or 1; f.Name=name or "F"; f.ClipsDescendants=clip or false
+	f.Parent=parent; return f
+end
+local function mkR(obj,s) local c=Instance.new("UICorner"); c.CornerRadius=UDim.new(s or 1,0); c.Parent=obj; return c end
+local function mkG(obj,c0,c1,rot) local g=Instance.new("UIGradient"); g.Color=ColorSequence.new(c0,c1); g.Rotation=rot or 180; g.Parent=obj end
+local function mkL(parent,txt,size,pos,col,font,zi,ax)
+	local l=Instance.new("TextLabel"); l.Size=size; l.Position=pos or UDim2.new(0,0,0,0)
+	l.BackgroundTransparency=1; l.Text=txt; l.TextColor3=col or Color3.new(1,1,1)
+	l.Font=font or Enum.Font.GothamBold; l.TextScaled=true; l.BorderSizePixel=0
+	l.ZIndex=zi or 1; l.TextXAlignment=ax or Enum.TextXAlignment.Center
+	l.TextTruncate=Enum.TextTruncate.AtEnd; l.Parent=parent; return l
+end
+local function mkB(parent,size,pos,zi)
+	local b=Instance.new("TextButton"); b.Size=size; b.Position=pos or UDim2.new(0,0,0,0)
+	b.BackgroundTransparency=1; b.Text=""; b.BorderSizePixel=0; b.ZIndex=zi or 1
+	b.AutoButtonColor=false; b.Parent=parent; return b
+end
+
+-- Invisible watermark label (transparent, size 0 — not visible in game)
+local function mkWM(parent,txt,zi)
+	local l=Instance.new("TextLabel"); l.Size=UDim2.new(0,0,0,0)
+	l.BackgroundTransparency=1; l.TextTransparency=1; l.Text=txt
+	l.Font=Enum.Font.Gotham; l.TextScaled=false; l.TextSize=1
+	l.BorderSizePixel=0; l.ZIndex=zi or 1; l.Name="_wm"
+	l.Parent=parent; return l
+end
+
+-- ── GUI ──────────────────────────────────────────────────────────────
+local GUI=Instance.new("ScreenGui")
+GUI.Name="FlowixPhone_J4CKTUS_"..(_WM_VERSION) -- watermark in GUI name
+GUI.ResetOnSpawn=false; GUI.ZIndexBehavior=Enum.ZIndexBehavior.Sibling
+GUI.IgnoreGuiInset=true; GUI.DisplayOrder=10; GUI.Parent=playerGui
+
+-- Invisible root watermark
+mkWM(GUI,"iPhone 14 Pro UI | Made by J4CKTUS | flowix.gg | discord.gg/Sf4shXvy",1)
+
+local HintBG=mkF(GUI,UDim2.new(0,240,0,28),UDim2.new(0.5,-120,1,-40),Color3.new(0,0,0),0.42,3,"Hint")
+mkR(HintBG,0.5)
+mkL(HintBG,"[ M ]  Open / Close Phone",UDim2.new(1,0,1,0),nil,Color3.fromRGB(190,185,210),Enum.Font.Gotham,3)
+
+-- ── PHONE CONTAINER ──────────────────────────────────────────────────
+local PC=Instance.new("Frame")
+PC.Name="FlowixPhone_PC" -- watermark in frame name
+PC.Size=UDim2.new(0,230,0,490); PC.AnchorPoint=Vector2.new(0,1)
+PC.Position=UDim2.new(0,30,1,80); PC.BackgroundTransparency=1
+PC.BorderSizePixel=0; PC.ZIndex=5; PC.Visible=false; PC.Parent=GUI
+mkWM(PC,"J4CKTUS | flowix.gg | discord.gg/Sf4shXvy",5)
+
+local POS_OPEN=UDim2.new(0,30,1,-18); local POS_CLOSE=UDim2.new(0,30,1,80)
+
+-- ── SIDE BUTTONS ─────────────────────────────────────────────────────
+local function sideBtn(x,y,w,h)
+	local b=mkF(PC,UDim2.new(0,w,0,h),UDim2.new(0,x,0,y),Color3.fromRGB(185,182,196),0,8)
+	mkR(b,0.35); mkG(b,Color3.fromRGB(212,208,222),Color3.fromRGB(155,152,168),90)
+end
+sideBtn(-7,60,7,19); sideBtn(-7,94,7,31); sideBtn(-7,133,7,31); sideBtn(230,110,7,46)
+
+-- ── RIM ──────────────────────────────────────────────────────────────
+local rim=mkF(PC,UDim2.new(1,0,1,0),UDim2.new(0,0,0,0),Color3.fromRGB(200,197,212),0,5,"Rim")
+mkR(rim,0.22); mkG(rim,Color3.fromRGB(225,222,235),Color3.fromRGB(155,152,168),155)
+mkWM(rim,"flowix.gg",5)
+
+-- ── BODY ─────────────────────────────────────────────────────────────
+local Body=mkF(PC,UDim2.new(0,224,0,484),UDim2.new(0,3,0,3),Color3.fromRGB(50,38,72),0,6,"Body",true)
+mkR(Body,0.22); mkG(Body,Color3.fromRGB(76,58,108),Color3.fromRGB(32,24,52),150)
+mkWM(Body,"Made by J4CKTUS | flowix.gg | discord.gg/Sf4shXvy",6)
+
+-- ── SCREEN ───────────────────────────────────────────────────────────
+local SC=mkF(Body,UDim2.new(0.930,0,0.962,0),UDim2.new(0.035,0,0.019,0),Color3.new(0,0,0),0,7,"SC",true)
+mkR(SC,0.19); local Screen=SC
+mkWM(Screen,"J4CKTUS | flowix.gg",7)
+
+-- ── WALLPAPER ────────────────────────────────────────────────────────
+local WP=mkF(Screen,UDim2.new(1,0,1,0),nil,Color3.fromRGB(2,2,10),0,7,"WP",true)
+mkR(WP,0.19); mkG(WP,Color3.fromRGB(6,3,18),Color3.fromRGB(1,1,6),168)
+mkWM(WP,"flowix.gg | discord.gg/Sf4shXvy | J4CKTUS",7)
+
+for _,d in ipairs({
+	{-0.12,0.44,0.74,0.44,Color3.fromRGB(7,12,80),0.58},
+	{0.46,0.04,0.60,0.34,Color3.fromRGB(32,7,70),0.62},
+	{0.36,0.54,0.48,0.28,Color3.fromRGB(4,7,55),0.70},
+	}) do mkR(mkF(WP,UDim2.new(d[3],0,d[4],0),UDim2.new(d[1],0,d[2],0),d[5],d[6],7),0.5) end
+for _,d in ipairs({
+	{-0.22,0.16,0.94,0.52,Color3.fromRGB(36,40,80),0.052},
+	{0.26,0.26,0.94,0.52,Color3.fromRGB(30,36,72),0.052},
+	}) do
+	local o=mkF(WP,UDim2.new(d[3],0,d[4],0),UDim2.new(d[1],0,d[2],0),d[5],0,8); mkR(o,0.5)
+	local i=mkF(o,UDim2.new(0.896,0,0.896,0),UDim2.new(0.052,0,0.052,0),Color3.fromRGB(2,2,10),0,9)
+	mkR(i,0.5); mkG(i,Color3.fromRGB(6,3,18),Color3.fromRGB(1,1,6),168)
+end
+
+-- ── STATUS BAR ───────────────────────────────────────────────────────
+local SB=mkF(Screen,UDim2.new(1,0,0,16),UDim2.new(0,0,0,8),Color3.new(0,0,0),1,19,"SB")
+local SBTime=Instance.new("TextLabel")
+SBTime.Size=UDim2.new(0,36,1,0); SBTime.Position=UDim2.new(0,5,0,0)
+SBTime.BackgroundTransparency=1; SBTime.Text="9:41"; SBTime.TextColor3=Color3.new(1,1,1)
+SBTime.Font=Enum.Font.GothamBold; SBTime.TextScaled=true; SBTime.BorderSizePixel=0
+SBTime.ZIndex=20; SBTime.TextXAlignment=Enum.TextXAlignment.Left; SBTime.Parent=SB
+
+local SBR=mkF(SB,UDim2.new(0,52,0,12),UDim2.new(1,-54,0,2),Color3.new(0,0,0),1,19,"SBR")
+for i,h in ipairs({4,6,8,11}) do
+	mkR(mkF(SBR,UDim2.new(0,2,0,h),UDim2.new(0,(i-1)*4,1,-h),Color3.new(1,1,1),0,20),0.4)
+end
+local WFX=18
+mkR(mkF(SBR,UDim2.new(0,2,0,2),UDim2.new(0,WFX+4,1,-3),Color3.new(1,1,1),0,20),1)
+local wa1=mkF(SBR,UDim2.new(0,6,0,4),UDim2.new(0,WFX+2,1,-8),Color3.new(1,1,1),0,20); mkR(wa1,0.5)
+mkF(wa1,UDim2.new(1,0,0.5,0),UDim2.new(0,0,0.5,0),Color3.fromRGB(2,2,10),0,21)
+mkR(mkF(wa1,UDim2.new(0,3,0,3),UDim2.new(0,1.5,0,0),Color3.fromRGB(2,2,10),0,21),0.5)
+local wa2=mkF(SBR,UDim2.new(0,11,0,7),UDim2.new(0,WFX-0.5,1,-12),Color3.new(1,1,1),0,20); mkR(wa2,0.5)
+mkF(wa2,UDim2.new(1,0,0.5,0),UDim2.new(0,0,0.5,0),Color3.fromRGB(2,2,10),0,21)
+mkR(mkF(wa2,UDim2.new(0,7,0,5),UDim2.new(0,2,0,0),Color3.fromRGB(2,2,10),0,21),0.5)
+local BO=mkF(SBR,UDim2.new(0,18,0,9),UDim2.new(0,34,0,1.5),Color3.new(1,1,1),0.3,20,"BO")
+mkR(BO,0.28); mkR(mkF(BO,UDim2.new(0,14,0,6),UDim2.new(0,1,0,1.5),Color3.fromRGB(78,214,68),0,21),0.2)
+mkR(mkF(SBR,UDim2.new(0,2,0,4),UDim2.new(0,53,0,4),Color3.new(1,1,1),0.3,20),0.5)
+
+-- ── APP DATA ─────────────────────────────────────────────────────────
+local HOME_APPS={
+	{n="Settings", c=Color3.fromRGB(140,140,144),ic="⚙", bg=Color3.fromRGB(18,18,22)},
+	{n="App Store",c=Color3.fromRGB(10,124,255), ic="A", bg=Color3.fromRGB(3,14,40)},
+	{n="Mail",     c=Color3.fromRGB(10,124,255), ic="✉", bg=Color3.fromRGB(3,12,36)},
+	{n="Weather",  c=Color3.fromRGB(36,116,218), ic="☁", bg=Color3.fromRGB(3,14,34)},
+	{n="Maps",     c=Color3.fromRGB(46,168,68),  ic="◈", bg=Color3.fromRGB(3,20,6)},
+	{n="Notes",    c=Color3.fromRGB(250,200,46), ic="≡", bg=Color3.fromRGB(32,22,2)},
+	{n="Music",    c=Color3.fromRGB(208,36,88),  ic="♫", bg=Color3.fromRGB(30,2,12)},
+	{n="Podcasts", c=Color3.fromRGB(148,46,218), ic="◎", bg=Color3.fromRGB(16,2,26)},
+	{n="Calendar", c=Color3.fromRGB(255,56,46),  ic="31",bg=Color3.fromRGB(26,2,2)},
+	{n="FaceTime", c=Color3.fromRGB(50,196,66),  ic="📹",bg=Color3.fromRGB(2,22,4)},
+	{n="Photos",   c=Color3.fromRGB(255,160,10), ic="◉", bg=Color3.fromRGB(28,14,2)},
+	{n="Clock",    c=Color3.fromRGB(22,22,26),   ic="◷", bg=Color3.fromRGB(3,3,5)},
+}
+
+-- Credit lines shown very small at bottom of each app screen
+local APP_CREDITS={
+	["Settings"] ="Made by J4CKTUS  •  flowix.gg",
+	["App Store"]="Made by J4CKTUS  •  flowix.gg",
+	["Mail"]     ="Made by J4CKTUS  •  flowix.gg",
+	["Weather"]  ="Made by J4CKTUS  •  flowix.gg",
+	["Maps"]     ="Made by J4CKTUS  •  flowix.gg",
+	["Notes"]    ="Made by J4CKTUS  •  flowix.gg",
+	["Music"]    ="Made by J4CKTUS  •  flowix.gg",
+	["Podcasts"] ="Made by J4CKTUS  •  flowix.gg",
+	["Calendar"] ="Made by J4CKTUS  •  flowix.gg",
+	["FaceTime"] ="Made by J4CKTUS  •  flowix.gg",
+	["Photos"]   ="Made by J4CKTUS  •  flowix.gg",
+	["Clock"]    ="Made by J4CKTUS  •  flowix.gg",
+}
+
+local appScreens={}; local currentApp=nil; local phoneOpen=false; local isLocked=true
+local EN_DAYS={"Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"}
+local EN_MONTHS={"January","February","March","April","May","June","July","August","September","October","November","December"}
+
+-- ── LOCKSCREEN ───────────────────────────────────────────────────────
+local LS=mkF(Screen,UDim2.new(1,0,1,0),nil,Color3.new(0,0,0),1,10,"LS")
+mkR(LS,0.19)
+mkWM(LS,"Flowix Phone | J4CKTUS | flowix.gg | discord.gg/Sf4shXvy",10)
+
+local LockDate=mkL(LS,"Thursday, March 5",
+	UDim2.new(1,0,0,18),UDim2.new(0,0,0.10,0),
+	Color3.fromRGB(212,208,232),Enum.Font.Gotham,11,Enum.TextXAlignment.Center)
+local LockTime=mkL(LS,"9:41",
+	UDim2.new(1,0,0,60),UDim2.new(0,0,0.14,0),
+	Color3.new(1,1,1),Enum.Font.GothamBold,11,Enum.TextXAlignment.Center)
+
+mkL(LS,"tap to open",UDim2.new(0.68,0,0,16),UDim2.new(0.16,0,0.910,0),Color3.fromRGB(160,155,185),Enum.Font.Gotham,11)
+
+-- Small visible credit on lockscreen bottom
+mkL(LS,"flowix.gg  •  J4CKTUS",UDim2.new(0.80,0,0,10),UDim2.new(0.10,0,0.88,0),
+	Color3.fromRGB(80,78,98),Enum.Font.Gotham,11,Enum.TextXAlignment.Center)
+
+mkR(mkF(LS,UDim2.new(0.295,0,0.007,0),UDim2.new(0.353,0,0.963,0),Color3.new(1,1,1),0,11),1)
+
+-- Torch button
+local tF=mkF(LS,UDim2.new(0.168,0,0.078,0),UDim2.new(0.090,0,0.856,0),Color3.fromRGB(56,56,68),0.16,11); mkR(tF,0.28)
+local tBG=mkF(tF,UDim2.new(1,0,1,0),nil,Color3.new(1,1,1),0.88,11); mkR(tBG,0.28)
+mkG(tBG,Color3.fromRGB(78,76,94),Color3.fromRGB(44,42,56),160)
+mkL(tF,"🔦",UDim2.new(0.58,0,0.58,0),UDim2.new(0.21,0,0.21,0),Color3.new(1,1,1),Enum.Font.GothamBold,12)
+
+-- Camera button
+local cF=mkF(LS,UDim2.new(0.168,0,0.078,0),UDim2.new(0.742,0,0.856,0),Color3.fromRGB(56,56,68),0.16,11); mkR(cF,0.28)
+local cBG=mkF(cF,UDim2.new(1,0,1,0),nil,Color3.new(1,1,1),0.88,11); mkR(cBG,0.28)
+mkG(cBG,Color3.fromRGB(78,76,94),Color3.fromRGB(44,42,56),160)
+mkL(cF,"📷",UDim2.new(0.58,0,0.58,0),UDim2.new(0.21,0,0.21,0),Color3.new(1,1,1),Enum.Font.GothamBold,12)
+
+-- ── HOMESCREEN ───────────────────────────────────────────────────────
+local HS=mkF(Screen,UDim2.new(1,0,1,0),nil,Color3.new(0,0,0),1,9,"HS"); HS.Visible=false
+mkR(HS,0.19)
+mkWM(HS,"J4CKTUS | flowix.gg | discord.gg/Sf4shXvy",9)
+mkR(mkF(HS,UDim2.new(0.295,0,0.007,0),UDim2.new(0.353,0,0.963,0),Color3.new(1,1,1),0,10),1)
+
+-- Small credit on homescreen
+mkL(HS,"flowix.gg  •  J4CKTUS",UDim2.new(0.80,0,0,9),UDim2.new(0.10,0,0.845,0),
+	Color3.fromRGB(70,68,88),Enum.Font.Gotham,10,Enum.TextXAlignment.Center)
+
+-- ── APP SCREEN FACTORY ───────────────────────────────────────────────
+local function makeAppScreen(data)
+	local scr=mkF(Screen,UDim2.new(1,0,1,0),UDim2.new(1,0,0,0),data.bg,0,16,data.n); scr.Visible=false
+	mkR(scr,0.19)
+	mkG(scr,data.bg,Color3.new(math.min(data.bg.R+0.06,1),math.min(data.bg.G+0.06,1),math.min(data.bg.B+0.06,1)),148)
+
+	-- Invisible watermark inside every app screen
+	mkWM(scr,"J4CKTUS | flowix.gg | discord.gg/Sf4shXvy",16)
+
+	local aSB=mkF(scr,UDim2.new(1,0,0,16),UDim2.new(0,0,0,8),Color3.new(0,0,0),1,19)
+	local aTime=Instance.new("TextLabel"); aTime.Size=UDim2.new(0,36,1,0); aTime.Position=UDim2.new(0,5,0,0)
+	aTime.BackgroundTransparency=1; aTime.TextColor3=Color3.new(1,1,1); aTime.Font=Enum.Font.GothamBold
+	aTime.TextScaled=true; aTime.BorderSizePixel=0; aTime.ZIndex=20
+	aTime.TextXAlignment=Enum.TextXAlignment.Left; aTime.Parent=aSB
+
+	-- App header
+	local hdr=mkF(scr,UDim2.new(1,0,0.074,0),UDim2.new(0,0,0.060,0),Color3.new(0,0,0),0.54,17)
+	mkL(hdr,data.n,UDim2.new(0.78,0,0.56,0),UDim2.new(0.11,0,0.24,0),Color3.new(1,1,1),Enum.Font.GothamBold,18,Enum.TextXAlignment.Left)
+
+	-- Small visible credit at very bottom of each app — tiny, subtle
+	mkL(scr,APP_CREDITS[data.n] or "Made by J4CKTUS  •  flowix.gg",
+		UDim2.new(1,0,0,8),UDim2.new(0,0,0.955,0),
+		Color3.fromRGB(60,58,78),Enum.Font.Gotham,17,Enum.TextXAlignment.Center)
+
+	mkR(mkF(scr,UDim2.new(0.295,0,0.007,0),UDim2.new(0.353,0,0.966,0),Color3.new(1,1,1),0,18),1)
+	RunService.Heartbeat:Connect(function() aTime.Text=os.date("%I"):gsub("^0","")..":"..os.date("%M") end)
+	return scr
+end
+
+-- ── ICON FACTORY ─────────────────────────────────────────────────────
+local function makeIcon(parent,data,zi,onTap)
+	local cont=mkF(parent,UDim2.new(1,0,1,0),nil,Color3.new(0,0,0),1,zi)
+	local bg=mkF(cont,UDim2.new(0.84,0,0.72,0),UDim2.new(0.08,0,0,0),data.c,0,zi+1)
+	mkR(bg,0.22)
+	mkG(bg,Color3.new(math.min(data.c.R+0.18,1),math.min(data.c.G+0.18,1),math.min(data.c.B+0.18,1)),data.c,148)
+	mkR(mkF(bg,UDim2.new(0.86,0,0.36,0),UDim2.new(0.07,0,0.04,0),Color3.new(1,1,1),0.70,zi+2),0.30)
+	mkL(bg,data.ic,UDim2.new(1,0,1,0),nil,Color3.new(1,1,1),Enum.Font.GothamBold,zi+2)
+	local nl=mkL(cont,data.n,UDim2.new(1.10,0,0.20,0),UDim2.new(-0.05,0,0.75,0),Color3.new(1,1,1),Enum.Font.Gotham,zi+1)
+	nl.TextStrokeTransparency=0.45; nl.TextStrokeColor3=Color3.new(0,0,0)
+	local hit=mkB(cont,UDim2.new(1,0,0.72,0),nil,zi+4)
+	hit.MouseEnter:Connect(function() tw(bg,0.10,{Size=UDim2.new(0.94,0,0.78,0),Position=UDim2.new(0.03,0,-0.03,0)}) end)
+	hit.MouseLeave:Connect(function() tw(bg,0.12,{Size=UDim2.new(0.84,0,0.72,0),Position=UDim2.new(0.08,0,0,0)}) end)
+	hit.MouseButton1Down:Connect(function() tw(bg,0.055,{Size=UDim2.new(0.70,0,0.60,0),Position=UDim2.new(0.15,0,0.04,0)},Enum.EasingStyle.Quad,Enum.EasingDirection.Out) end)
+	hit.MouseButton1Up:Connect(function()
+		twB(bg,0.16,{Size=UDim2.new(0.84,0,0.72,0),Position=UDim2.new(0.08,0,0,0)})
+		if onTap then task.delay(0.04,function() onTap(data) end) end
+	end)
+end
+
+-- ── APP OPEN / CLOSE ─────────────────────────────────────────────────
+local function openApp(data)
+	if currentApp then return end; currentApp=data.n
+	local s=appScreens[data.n]; if not s then return end
+	tw(HS,0.20,{Position=UDim2.new(-0.36,0,0,0)},Enum.EasingStyle.Quad,Enum.EasingDirection.In)
+	s.Visible=true; s.Position=UDim2.new(1,0,0,0); tw(s,0.28,{Position=UDim2.new(0,0,0,0)})
+end
+local function goHome()
+	if not currentApp then return end
+	local s=appScreens[currentApp]; currentApp=nil
+	if s then tw(s,0.20,{Position=UDim2.new(1,0,0,0)},Enum.EasingStyle.Quad,Enum.EasingDirection.In) end
+	HS.Position=UDim2.new(-0.36,0,0,0); tw(HS,0.28,{Position=UDim2.new(0,0,0,0)})
+	task.delay(0.24,function() if s then s.Visible=false end end)
+end
+mkB(Screen,UDim2.new(1,0,0.08,0),UDim2.new(0,0,0.92,0),26).MouseButton1Click:Connect(function()
+	if currentApp then goHome() end
+end)
+
+-- ── APP GRID ─────────────────────────────────────────────────────────
+local gridF=mkF(HS,UDim2.new(0.916,0,0.780,0),UDim2.new(0.042,0,0.140,0),Color3.new(0,0,0),1,9,"Grid")
+local gl=Instance.new("UIGridLayout")
+gl.CellSize=UDim2.new(0.288,0,0,60); gl.CellPadding=UDim2.new(0.038,0,0,10)
+gl.SortOrder=Enum.SortOrder.LayoutOrder; gl.HorizontalAlignment=Enum.HorizontalAlignment.Center; gl.Parent=gridF
+for i,data in ipairs(HOME_APPS) do
+	appScreens[data.n]=makeAppScreen(data)
+	local cell=mkF(gridF,UDim2.new(1,0,1,0),nil,Color3.new(0,0,0),1,9)
+	cell.LayoutOrder=i; makeIcon(cell,data,9,openApp)
+end
+
+-- ── UNLOCK — CLICK ANYWHERE ──────────────────────────────────────────
+local function doUnlock()
+	if not isLocked then return end; isLocked=false
+	tw(LS,0.42,{Position=UDim2.new(0,0,-1.05,0)},Enum.EasingStyle.Quart,Enum.EasingDirection.Out)
+	task.delay(0.38,function()
+		LS.Visible=false; HS.Visible=true
+		HS.Position=UDim2.new(0,0,0,0); HS.BackgroundTransparency=1
+	end)
+end
+mkB(LS,UDim2.new(1,0,1,0),UDim2.new(0,0,0,0),30).MouseButton1Click:Connect(doUnlock)
+
+-- ── PHONE OPEN / CLOSE ───────────────────────────────────────────────
+local function openPhone()
+	phoneOpen=true; isLocked=true
+	for _,s in pairs(appScreens) do s.Visible=false; s.Position=UDim2.new(1,0,0,0) end
+	currentApp=nil; LS.Visible=true; LS.Position=UDim2.new(0,0,0,0)
+	HS.Visible=false; HS.Position=UDim2.new(0,0,0,0)
+	PC.Visible=true; PC.Position=POS_CLOSE; twB(PC,0.50,{Position=POS_OPEN})
+end
+local function closePhone()
+	phoneOpen=false
+	tw(PC,0.32,{Position=POS_CLOSE},Enum.EasingStyle.Back,Enum.EasingDirection.In)
+	task.delay(0.34,function() if not phoneOpen then PC.Visible=false end end)
+end
+UserInputService.InputBegan:Connect(function(inp,proc)
+	if proc then return end
+	if inp.KeyCode==Enum.KeyCode.M then if phoneOpen then closePhone() else openPhone() end end
+end)
+
+-- ── LIVE CLOCK ───────────────────────────────────────────────────────
+local function updateClock()
+	local t=os.date("*t",os.time())
+	local str=os.date("%I"):gsub("^0","")..":"..os.date("%M")
+	SBTime.Text=str; LockTime.Text=str
+	LockDate.Text=EN_DAYS[t.wday]..", "..EN_MONTHS[t.month].." "..t.day
+end
+updateClock()
+local _ls=""
+RunService.Heartbeat:Connect(function()
+	local s=os.date("%S"); if s~=_ls then _ls=s; updateClock() end
+end)
+
+-- ── STARTUP LOG ──────────────────────────────────────────────────────
+print("╔══════════════════════════════════════════════╗")
+print("║  Flowix Phone  |  Made by J4CKTUS            ║")
+print("║  flowix.gg     |  discord.gg/Sf4shXvy        ║")
+print("║  Version: "..(_WM_VERSION).."  |  Press M to open/close   ║")
+print("╚══════════════════════════════════════════════╝")
